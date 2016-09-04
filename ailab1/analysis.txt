@@ -1,0 +1,18 @@
+I followed the pseudocode given in the assignment very closely. I also did the
+extra credit using the implementation given to us. On my machine my program
+took ~27 seconds. Nineteen of the crytoquips scored 100 and one scored 95.
+
+I created another search method that takes the number of words to match as an
+argument. I have the default search method call this new recursive method.
+	private int[] search(final int numberOfWordsToMatch)
+
+The cryptoquip with the worst performance was the 12th one.
+	# of calls to search(cipherwords.size()): 265
+	# of calls to search(cipherwords.size() - 1): 1491
+	
+If I wanted to improve the performance, I would keep track of the best answer
+with the most matched words as I am searching for all words. If not all words
+are matched at the end, I would simply return the best answer that was found
+along the way to eliminate the extra call to search. I think that this would
+decrease the accuracy of the answer but it would be a good tradeoff for longer
+cryptoquips.
