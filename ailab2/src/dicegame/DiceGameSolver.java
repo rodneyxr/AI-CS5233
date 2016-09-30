@@ -14,7 +14,7 @@ public class DiceGameSolver implements Runnable {
 	public DiceGameSolver(Scanner in, PrintStream out) {
 		this.in = in;
 		this.out = out;
-		numGames = 2; // TODO: Change to 1000 for final version
+		numGames = 1000; // TODO: Change to 1000 for final version
 	}
 
 	public void run() {
@@ -118,45 +118,63 @@ public class DiceGameSolver implements Runnable {
 		// of the evidence variables.
 		//
 		// See BayesianNetworkTest.java for examples.
-		for (int i = 0; i < evidenceList.size(); i++) {
-			int e = evidenceList.get(i);
-			Variable v = new Variable("Evidence" + i + "" + (i % 3 + 1), DiceGame.EVIDENCE);
-			bn.addVariable(v);
-			Factor f = new Factor(die1, die2, v);
+		for (int i = 0; i < evidenceList.size(); i += 3) {
+			int e1 = evidenceList.get(i);
+			int e2 = evidenceList.get(i + 1);
+			int e3 = evidenceList.get(i + 2);
+
+			Variable v1 = new Variable("Evidence" + i + "1", DiceGame.EVIDENCE);
+			Variable v2 = new Variable("Evidence" + (i + 1) + "2", DiceGame.EVIDENCE);
+			Variable v3 = new Variable("Evidence" + (i + 2) + "3", DiceGame.EVIDENCE);
+
+			bn.addVariable(v1);
+			bn.addVariable(v2);
+			bn.addVariable(v3);
+
+			Factor f1 = new Factor(die1, die2, v1);
+			Factor f2 = new Factor(die1, die2, v2);
+			Factor f3 = new Factor(die1, die2, v3);
+
+			// set the probabilities for each factor
 			for (int d1 = 1; d1 <= 6; d1++) {
 				for (int d2 = 1; d2 <= 6; d2++) {
-					double p = 0.0;
-					switch (i % 3) {
-					case 0:
-						// probability evidence1 = 1 is (die1 + die2 - 2) / 10
-						p = (d1 + d2 - 2) / 10.0;
-						break;
-					case 1:
-						// probability evidence2 = 1 is 0 if die1 > die2, 1 if die1 < die2, else 1/2
-						if (d1 > d2)
-							p = 0;
-						else if (d1 < d2)
-							p = 1;
-						else
-							p = 0.5;
-						break;
-					case 2:
-						// probability evidence3 = 1 is 0 if both dice are even, 1 if both are odd, else 1/2
-						if (d1 % 2 == 0 && d2 % 2 == 0)
-							p = 0;
-						else if (d1 % 2 == 1 && d2 % 2 == 1)
-							p = 1;
-						else
-							p = 0.5;
-						break;
-					}
-					if (e == 0)
+					// probability evidence1 = 1 is (die1 + die2 - 2) / 10
+					double p = (d1 + d2 - 2) / 10.0;
+					if (e1 == 0)
 						p = 1 - p;
-					f.set(p, d1 - 1, d2 - 1, e);
+					f1.set(p, d1 - 1, d2 - 1, e1);
+
+					// probability evidence2 = 1 is 0 if die1 > die2, 1 if die1 < die2, else 1/2
+					if (d1 > d2)
+						p = 0;
+					else if (d1 < d2)
+						p = 1;
+					else
+						p = 0.5;
+					if (e2 == 0)
+						p = 1 - p;
+					f2.set(p, d1 - 1, d2 - 1, e2);
+
+					// probability evidence3 = 1 is 0 if both dice are even, 1 if both are odd, else 1/2
+					if (d1 % 2 == 0 && d2 % 2 == 0)
+						p = 0;
+					else if (d1 % 2 == 1 && d2 % 2 == 1)
+						p = 1;
+					else
+						p = 0.5;
+					if (e3 == 0)
+						p = 1 - p;
+					f3.set(p, d1 - 1, d2 - 1, e3);
 				}
 			}
-			bn.addFactor(f);
-			bn.observe(v, DiceGame.EVIDENCE[e]);
+
+			bn.addFactor(f1);
+			bn.addFactor(f2);
+			bn.addFactor(f3);
+
+			bn.observe(v1, DiceGame.EVIDENCE[e1]);
+			bn.observe(v2, DiceGame.EVIDENCE[e2]);
+			bn.observe(v3, DiceGame.EVIDENCE[e3]);
 		}
 
 		Factor result1 = bn.eliminateVariables(die1);
