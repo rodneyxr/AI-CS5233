@@ -12,42 +12,13 @@ public class Learner implements Runnable {
 	String line;
 	int[] input;
 
-	final boolean CLASSICAL_LEARNING = true;
-
-	// counters
-	int n; // how many examples that have been processed
-	int nd[]; // how many examples for each digit d
-	int ndi[][]; // how many examples for each digit d where bit i == 1
-
-	// classical learning
-	double w[][];
+	// classical linear learning
 	final double LEARNING_RATE = .01;
+	double w[][];
 
 	public Learner(Scanner in, PrintStream out) {
 		this.in = in;
 		this.out = out;
-	}
-
-	// P(Y = d) = (nd + 1)/(n + 10)
-	private double p(int d) {
-		return (nd[d] + 1) / (double) (n + 10);
-	}
-
-	// P(Xi = 1 | Y = d) = (nd,i + 1)/(nd + 2)
-	// P(Xi = 0 | Y = d) = (nd - nd,i + 1)/(nd + 2)
-	private double p(int val, int i, int d) {
-		if (val == 1)
-			return (ndi[d][i] + 1) / (double) (nd[d] + 2);
-		return (nd[d] - ndi[d][i] + 1) / (double) (nd[d] + 2);
-	}
-
-	// log(P(Y)P(X1|Y) ... P(X64|Y)) = logP(Y) + logP(X1|Y) + ... + logP(X64|Y)
-	private double bayes(int y) {
-		double prob = Math.log(p(y));
-		for (int i = 0; i < 65; i++) {
-			prob += Math.log(p(0, i, y)) * Math.log(p(1, i, y));
-		}
-		return prob;
 	}
 
 	private double y(int d) {
@@ -59,11 +30,7 @@ public class Learner implements Runnable {
 	}
 
 	public void run() {
-		// initialize counters
-		n = 0;
-		nd = new int[10];
-		ndi = new int[10][65];
-
+		// initialize weights
 		w = new double[10][65];
 
 		input = new int[65];
@@ -75,27 +42,15 @@ public class Learner implements Runnable {
 				input[i + 1] = (c == '1') ? 1 : 0;
 			}
 
-			// replace this with a naive Bayes prediction
+			// y = w*x = w0x0 + w1x1 + ... w64x64
+			// Prediction is digit d corresponding to the highest yd value
 			int prediction = 0;
-			if (CLASSICAL_LEARNING) {
-				// y = w*x = w0x0 + w1x1 + ... w64x64
-				// Prediction is digit d corresponding to the highest yd value
-				double y = y(0);
-				for (int d = 1; d < 10; d++) {
-					double result = y(d);
-					if (result > y) {
-						y = result;
-						prediction = d;
-					}
-				}
-			} else {
-				double p = bayes(0);
-				for (int i = 1; i < 10; i++) {
-					double result = bayes(i);
-					if (result > p) {
-						p = result;
-						prediction = i;
-					}
+			double y = y(0);
+			for (int d = 1; d < 10; d++) {
+				double result = y(d);
+				if (result > y) {
+					y = result;
+					prediction = d;
 				}
 			}
 
@@ -111,28 +66,18 @@ public class Learner implements Runnable {
 				label = line.charAt(18) - 48;
 			}
 
-			if (CLASSICAL_LEARNING) {
-				// classical learning
-				// for each d != label,
-				for (int d = 0; d < 10; d++) {
-					if (d != label) {
-						// if yl - yd < 1
-						if (y(label) - y(d) < 1) {
-							// wd <- wd - a*x
-							// wl <- wl + a*x
-							for (int i = 0; i < 65; i++) {
-								w[d][i] -= LEARNING_RATE * input[i];
-								w[label][i] += LEARNING_RATE * input[i];
-							}
+			// for each d != label,
+			for (int d = 0; d < 10; d++) {
+				if (d != label) {
+					// if yl - yd < 1
+					if (y(label) - y(d) < 1) {
+						// wd <- wd - a*x
+						// wl <- wl + a*x
+						for (int i = 0; i < 65; i++) {
+							w[d][i] -= LEARNING_RATE * input[i];
+							w[label][i] += LEARNING_RATE * input[i];
 						}
 					}
-				}
-			} else {
-				// use label to update naive Bayes counts
-				n++;
-				nd[label]++;
-				for (int i = 0; i < 65; i++) {
-					ndi[label][i] += input[i] == 1 ? 1 : 0;
 				}
 			}
 
