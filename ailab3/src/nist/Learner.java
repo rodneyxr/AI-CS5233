@@ -13,7 +13,7 @@ public class Learner implements Runnable {
 	int[] input;
 
 	// classical linear learning
-	final double LEARNING_RATE = .01;
+	final double LEARNING_RATE = .0036;
 	double w[][];
 
 	public Learner(Scanner in, PrintStream out) {
