@@ -73,9 +73,11 @@ public class Interact2 {
         
         Runnable agent1 = new GomokuPlayer(agent1In, agent1Out);
         // Runnable agent1 = new HumanPlayer(agent1In, agent1Out);
+        // Runnable agent1 = new RodneyPlayer(agent1In, agent1Out);
         
-        Runnable agent2 = new GomokuPlayer(agent2In, agent2Out);
+        // Runnable agent2 = new GomokuPlayer(agent2In, agent2Out);
         // Runnable agent2 = new HumanPlayer(agent2In, agent2Out);
+        Runnable agent2 = new RodneyPlayer(agent2In, agent2Out);
 
         Thread ethread = new Thread(envir);
         Thread a1thread = new Thread(agent1);
